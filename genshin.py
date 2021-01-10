@@ -9,6 +9,7 @@ import requests
 from requests.exceptions import *
 
 from settings import *
+from notify import Notify
 
 
 def hexdigest(text):
@@ -239,9 +240,10 @@ def notify(secret: str, status: str, message):
 
 
 if __name__ == '__main__':
-    secret = input().strip().split('#')
-    secret.append('')
-    cookie = secret[0]
-    sc_secret = secret[1]
+    #secret = input().strip().split('#')
+    #secret.append('')
+    #cookie = secret[0]
+    #sc_secret = secret[1]
 
-    Sign(cookie).run()
+    #Sign(cookie).run()
+    Notify.send(app='jwj', status='失败', msg='hhh')
