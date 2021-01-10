@@ -191,12 +191,34 @@ infos = [
 ```
 ## 🔔订阅
 
-若开启订阅推送，无论成功与否，都会收到微信通知。
+若开启订阅推送，无论成功与否，都会收到推送通知。
 
 - 使用 GitHub 登录 [sc.ftqq.com](http://sc.ftqq.com/?c=github&a=login) 创建账号
 - 点击「[发送消息](http://sc.ftqq.com/?c=code)」，获取`SCKEY`
 - 点击「[微信推送](http://sc.ftqq.com/?c=wechat&a=bind)」，完成微信绑定
 - 建立名为`SCKEY`的 secret，并添加获取的 SCKEY 值，即可开启订阅推送
+
+## 参数
+
+`Settings`-->`Secrets`里的参数，`Name`必须为下列的参数名称之一，`Value`填写对应获取的值
+
+|   参数名称         |   是否必填   |   默认值           |   说明                                                          |
+|---                |---          |---                 |---                                                              |
+|   COOKIE          | ✅         |                    |   米游社的Cookie                                                 |
+|   AUTO_PULL       | ❌         | false              |   是否开启自动同步上游仓库功能                                     |
+|   SCKEY           | ❌         |                    |   Server酱推送所需的SCKEY                                         |
+|   COOL_PUSH_SKEY  | ❌         |                    |   Cool Push推送所需的SKEY                                         |
+|   COOL_PUSH_MODE  | ❌         | send               |   Cool Push推送方式,可选群组(group)或者微信(wx)                     |
+|   BARK_KEY        | ❌         |                    |   Bark推送所需的BARK_KEY                                          |
+|   BARK_SOUND      | ❌         | healthnotification |   Bark推送的铃声,在APP内查看铃声列表                                |
+|   TG_BOT_TOKEN    | ❌         |                    |   Telegram Bot的TOKEN                                             |
+|   TG_USER_ID      | ❌         |                    |   接收通知消息的Telegram用户的ID                                   |
+|   DD_BOT_TOKEN    | ❌         |                    |   钉钉机器人的webhook KEY                                          |
+|   DD_BOT_SECRET   | ❌         |                    |   钉钉加签密钥,机器人安全设置页面,加签一栏下面显示的SEC开头的字符串    |
+|   WW_BOT_KEY      | ❌         |                    |   企业微信机器人的webhook KEY                                      |
+|   IGOT_KEY        | ❌         |                    |   iGot推送所需的KEY                                                |
+|   PUSH_PLUS_TOKEN | ❌         |                    |   pushplus一对一推送或一对多推送下面的Token                         |
+|   PUSH_PLUS_USER  | ❌         | 一对一推送          |   pushplus一对多推送的'群组编码'                                   |
 
 ## ❗️协议
 

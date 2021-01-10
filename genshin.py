@@ -6,9 +6,9 @@ import time
 import uuid
 
 import requests
-from requests.exceptions import *
+from requests.exceptions import HTTPError
 
-from settings import *
+from settings import log, CONFIG
 from notify import Notify
 
 
@@ -19,7 +19,7 @@ def hexdigest(text):
 
 
 class Base(object):
-    def __init__(self, cookies: str=None):
+    def __init__(self, cookies: str = None):
         if not isinstance(cookies, str):
             raise TypeError('%s want a %s but got %s' % (
                 self.__class__, type(__name__), type(cookies)))
@@ -54,7 +54,7 @@ class Roles(Base):
 
         return response
 
-    def get_roles(self, max_attempt_number: int=4):
+    def get_roles(self, max_attempt_number: int = 4):
         log.info('准备获取账号信息...')
         error = None
         response = dict()
@@ -64,11 +64,13 @@ class Roles(Base):
                 content = requests.Session().get(CONFIG.ROLE_URL, headers=self.get_header()).text
                 response = self.to_python(content)
             except HTTPError as error:
-                log.error('HTTP error when get user game roles, retry %s time(s) ...' % i)
+                log.error(
+                    'HTTP error when get user game roles, retry %s time(s) ...' % i)
                 log.error('error is %s' % error)
                 continue
             except KeyError as error:
-                log.error('Wrong response to get user game roles, retry %s time(s) ...' % i)
+                log.error(
+                    'Wrong response to get user game roles, retry %s time(s) ...' % i)
                 log.error('response is %s' % error)
                 continue
             except Exception as error:
@@ -78,7 +80,8 @@ class Roles(Base):
             break
 
         if error:
-            log.error('Maximum retry times have been reached, error is %s ' % error)
+            log.error(
+                'Maximum retry times have been reached, error is %s ' % error)
             raise error
         if response.get('retcode', 1) != 0 or response.get('data', None) is None:
             log.error(response)
@@ -89,7 +92,7 @@ class Roles(Base):
 
 
 class Sign(Base):
-    def __init__(self, cookies: str=None):
+    def __init__(self, cookies: str = None):
         super(Sign, self).__init__(cookies)
         self._region_list = []
         self._region_name_list = []
@@ -124,7 +127,8 @@ class Sign(Base):
 
         # role list empty
         if not role_list:
-            notify(sc_secret, '失败', user_game_roles.get('message', 'role list empty'))
+            notify.send(status='签到失败', msg=user_game_roles.get(
+                'message', 'role list empty'))
             exit(-1)
 
         log.info('当前账号绑定了 {} 个角色'.format(len(role_list)))
@@ -132,12 +136,14 @@ class Sign(Base):
         # cn_gf01:  天空岛
         # cn_qd01:  世界树
         self._region_list = [(i.get('region', 'NA')) for i in role_list]
-        self._region_name_list = [(i.get('region_name', 'NA')) for i in role_list]
+        self._region_name_list = [(i.get('region_name', 'NA'))
+                                  for i in role_list]
         self._uid_list = [(i.get('game_uid', 'NA')) for i in role_list]
 
         log.info('准备获取签到信息...')
         for i in range(len(self._uid_list)):
-            info_url = CONFIG.INFO_URL.format(self._region_list[i], CONFIG.ACT_ID, self._uid_list[i])
+            info_url = CONFIG.INFO_URL.format(
+                self._region_list[i], CONFIG.ACT_ID, self._uid_list[i])
             try:
                 content = requests.Session().get(info_url, headers=self.get_header()).text
                 info_list.append(self.to_python(content))
@@ -151,15 +157,14 @@ class Sign(Base):
         return info_list
 
     def run(self):
-        log.info('任务开始')
-
         info_list = self.get_info()
         # TODO 其实只会循环一次...
         for i in range(len(info_list)):
             today = info_list[i]['data']['today']
             total_sign_day = info_list[i]['data']['total_sign_day']
             awards = Roles(self._cookie).get_awards()['data']['awards']
-            uid = str(self._uid_list[i]).replace(str(self._uid_list[i])[3:6], '***', 1)
+            uid = str(self._uid_list[i]).replace(
+                str(self._uid_list[i])[3:6], '***', 1)
 
             messgae = {
                 'today': today,
@@ -174,11 +179,12 @@ class Sign(Base):
                 messgae['award_name'] = awards[total_sign_day - 1]['name']
                 messgae['award_cnt'] = awards[total_sign_day - 1]['cnt']
                 messgae['status'] = "👀 旅行者 {} 号, 你已经签到过了哦".format(i + 1)
-                notify(sc_secret, "成功", self.message.format(**messgae))
+                notify.send(status='签到成功', msg=self.message.format(**messgae))
                 continue
             if info_list[i]['data']['first_bind'] is True:
-                messgae['status'] = "💪 旅行者 {} 号, 请先前往米游社App手动签到一次".format(i + 1)
-                notify(sc_secret, "失败", self.message.format(**messgae))
+                messgae['status'] = "💪 旅行者 {} 号, 请先前往米游社App手动签到一次".format(
+                    i + 1)
+                notify.send(status='签到失败', msg=self.message.format(**messgae))
                 continue
 
             data = {
@@ -203,47 +209,24 @@ class Sign(Base):
             # 0:      success
             # -5003:  already signed in
             if code != 0:
-                notify(sc_secret, "失败", response)
+                notify.send(status='签到失败', msg=response)
                 continue
             messgae['total_sign_day'] = total_sign_day + 1
             messgae['status'] = response['message']
-            notify(sc_secret, "成功", self.message.format(**messgae))
+            notify.send(status='签到成功', msg=self.message.format(**messgae))
 
     @property
     def message(self):
         return CONFIG.MESSGAE_TEMPLATE
 
 
-def notify(secret: str, status: str, message):
-    if isinstance(message, list) or isinstance(message, dict):
-        message = Sign.to_json(message)
-    log.info('签到{}: {}'.format(status, message))
-
-    if secret.startswith('SC'):
-        log.info('准备推送通知...')
-        url = 'https://sc.ftqq.com/{}.send'.format(secret)
-        data = {'text': '原神签到小助手 签到{}'.format(status), 'desp': message}
-        try:
-            response = Sign.to_python(requests.Session().post(url, data=data).text)
-        except Exception as e:
-            log.error(e)
-            raise HTTPError
-        else:
-            errmsg = response['errmsg']
-            if errmsg == 'success':
-                log.info('推送成功')
-            else:
-                log.error('{}: {}'.format('推送失败', response))
-    else:
-        log.info('未配置SCKEY,正在跳过推送')
-    return log.info('任务结束')
-
-
 if __name__ == '__main__':
-    #secret = input().strip().split('#')
-    #secret.append('')
-    #cookie = secret[0]
-    #sc_secret = secret[1]
+    secret = input().strip().split('#')
+    secret.append('')
+    cookie = secret[0]
+    # sc_secret = secret[1]
 
-    #Sign(cookie).run()
-    Notify.send(app='jwj', status='失败', msg='hhh')
+    notify = Notify()
+    log.info('任务开始')
+    Sign(cookie).run()
+    log.info('任务结束')

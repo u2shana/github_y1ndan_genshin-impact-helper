@@ -1,7 +1,8 @@
 '''
-@File    : notify.py
-@Time    : 2021-01-10 16:01:53
-@Github  : https://github.com/y1ndan/genshin-impact-helper
+@File                : notify.py
+@Github              : https://github.com/y1ndan/genshin-impact-helper
+@Last modified by    : y1ndan
+@Last modified time  : 2021-01-10 16:01:53
 '''
 import json
 import os
@@ -10,6 +11,7 @@ import time
 import hmac
 import hashlib
 import base64
+from urllib import parse
 from settings import log
 
 
@@ -24,54 +26,54 @@ class Notify(object):
 
     # ============================== Server Chan ==============================
     # 此处填你申请的SCKEY
-    # 注: Github Actions用户请到Settings->Secrets里设置,Name=PUSH_SCKEY,Value=<获取的值>
-    PUSH_SCKEY = 'SCU46297Tf6d9f00f257e60e01ce8abd65a7818fb5c87e7ae8c462'
+    # 注: Github Actions用户请到Settings->Secrets里设置,Name=SCKEY,Value=<获取的值>
+    SCKEY = ''
 
-    if os.environ.get('PUSH_SCKEY', '') != '':
-        PUSH_SCKEY = os.environ['PUSH_SCKEY']
+    if os.environ.get('SCKEY', '') != '':
+        SCKEY = os.environ['SCKEY']
 
     # ============================== Cool Push ================================
     # 此处填你申请的SKEY(详见文档: https://cp.xuthus.cc/)
-    # 注: Github Actions用户请到Settings->Secrets里设置,Name=PUSH_SKEY,Value=<获取的值>
-    PUSH_SKEY = '0039db7da7a89e2d3d51f3a8a101f34a'
+    # 注: Github Actions用户请到Settings->Secrets里设置,Name=COOL_PUSH_SKEY,Value=<获取的值>
+    COOL_PUSH_SKEY = ''
     # 此处填写私聊(send)或群组(group)或者微信(wx)推送方式，默认私聊推送
-    # 注: Github Actions用户若要更改,请到Settings->Secrets里设置,Name=PUSH_SKEY_MODE,Value=<group或wx>
-    PUSH_SKEY_MODE = 'send'
+    # 注: Github Actions用户若要更改,请到Settings->Secrets里设置,Name=COOL_PUSH_MODE,Value=<group或wx>
+    COOL_PUSH_MODE = 'send'
 
-    if os.environ.get('PUSH_SKEY', '') != '':
-        PUSH_SKEY = os.environ['PUSH_SKEY']
-    if os.environ.get('PUSH_SKEY_MODE', '') != '':
-        PUSH_SKEY_MODE = os.environ['PUSH_SKEY_MODE']
+    if os.environ.get('COOL_PUSH_SKEY', '') != '':
+        COOL_PUSH_SKEY = os.environ['COOL_PUSH_SKEY']
+    if os.environ.get('COOL_PUSH_MODE', '') != '':
+        COOL_PUSH_MODE = os.environ['COOL_PUSH_MODE']
 
     # ============================== iOS Bark App =============================
     # 此处填你Bark App的信息(IP/设备码,例如: https://api.day.app/XXXXXXXX)
-    # 注: Github Actions用户请到Settings->Secrets里设置,Name=PUSH_BARK,Value=<获取的值>
-    PUSH_BARK = 'q39t8ZAu9xchgsopHM9Z9F'
+    # 注: Github Actions用户请到Settings->Secrets里设置,Name=BARK_KEY,Value=<获取的值>
+    BARK_KEY = ''
     # BARK App推送铃声,铃声列表去App内查看
-    # 注: Github Actions用户若要更改,请到Settings->Secrets里设置,Name=PUSH_BARK_SOUND,Value=<铃声名称>
-    PUSH_BARK_SOUND = 'healthnotification'
+    # 注: Github Actions用户若要更改,请到Settings->Secrets里设置,Name=BARK_SOUND,Value=<铃声名称>
+    BARK_SOUND = 'healthnotification'
 
-    if os.environ.get('PUSH_BARK', '') != '':
-        if os.environ['PUSH_BARK'].find(
-                'https') != -1 or os.environ['PUSH_BARK'].find('http') != -1:
-            # 兼容BARK自建用户
-            PUSH_BARK = os.environ['PUSH_BARK']
+    if os.environ.get('BARK_KEY', '') != '':
+        if os.environ['BARK_KEY'].find(
+                'https') != -1 or os.environ['BARK_KEY'].find('http') != -1:
+            # 兼容BARK自建服务端用户
+            BARK_KEY = os.environ['BARK_KEY']
         else:
-            PUSH_BARK = 'https://api.day.app/' + os.environ['PUSH_BARK']
-    elif os.environ.get('PUSH_BARK_SOUND', '') != '':
-        PUSH_BARK_SOUND = os.environ['PUSH_BARK_SOUND']
-    elif PUSH_BARK != '' or PUSH_BARK.find('https') != -1 or PUSH_BARK.find(
+            BARK_KEY = 'https://api.day.app/' + os.environ['BARK_KEY']
+    elif os.environ.get('BARK_SOUND', '') != '':
+        BARK_SOUND = os.environ['BARK_SOUND']
+    elif BARK_KEY != '' or BARK_KEY.find('https') != -1 or BARK_KEY.find(
             'http') != -1:
         # 兼容BARK本地用户只填写设备码的情况
-        PUSH_BARK = 'https://api.day.app/' + PUSH_BARK
+        BARK_KEY = 'https://api.day.app/' + BARK_KEY
 
     # ============================== Telegram Bot =============================
     # 此处填你telegram bot的Token,例如: 1077xxx4424:AAFjv0FcqxxxxxxgEMGfi22B4yh15R5uw
     # 注: Github Actions用户请到Settings->Secrets里设置,Name=TG_BOT_TOKEN,Value=<获取的值>
-    TG_BOT_TOKEN = '1571428155:AAGMd3aLST6Y55PQwadaqENivlK_70zgERQ'
+    TG_BOT_TOKEN = ''
     # 此处填你接收通知消息的telegram用户的id,例如: 129xxx206
     # 注: Github Actions用户请到Settings->Secrets里设置,Name=TG_USER_ID,Value=<获取的值>
-    TG_USER_ID = '370007185'
+    TG_USER_ID = ''
 
     if os.environ.get('TG_BOT_TOKEN', '') != '':
         TG_BOT_TOKEN = os.environ['TG_BOT_TOKEN']
@@ -82,7 +84,7 @@ class Notify(object):
     # 此处填你钉钉机器人的webhook,例如: 5a544165465465645d0f31dca676e7bd07415asdasd
     # 注: Github Actions用户请到Settings->Secrets里设置,Name=DD_BOT_TOKEN,Value=<获取的值>
     DD_BOT_TOKEN = ''
-    # 密钥,机器人安全设置页面,加签一栏下面显示的SEC开头的字符串
+    # 加签密钥,机器人安全设置页面,加签一栏下面显示的SEC开头的字符串
     # 注: Github Actions用户请到Settings->Secrets里设置,Name=DD_BOT_SECRET,Value=<获取的值>
     DD_BOT_SECRET = ''
 
@@ -101,17 +103,17 @@ class Notify(object):
 
     # ============================== iGot聚合推送 =================================
     # 此处填你iGot的信息(推送key,例如: https://push.hellyw.com/XXXXXXXX)
-    # 注: Github Actions用户请到Settings->Secrets里设置,Name=PUSH_IGOT,Value=<获取的值>
-    PUSH_IGOT = '5ff9770a85de28047e335e85'
+    # 注: Github Actions用户请到Settings->Secrets里设置,Name=IGOT_KEY,Value=<获取的值>
+    IGOT_KEY = ''
 
-    if os.environ.get('PUSH_IGOT', '') != '':
-        PUSH_IGOT = os.environ['PUSH_IGOT']
+    if os.environ.get('IGOT_KEY', '') != '':
+        IGOT_KEY = os.environ['IGOT_KEY']
 
     # ============================== push+ ====================================
     # 官方文档: https://pushplus.hxtrip.com/
-    # PUSH_PLUS_TOKEN: 微信扫码登录后一对一推送或一对多推送下面的token(您的Token)，不提供PUSH_PLUS_USER则默认为一对一推送
+    # PUSH_PLUS_TOKEN: 微信扫码登录后一对一推送或一对多推送下面的token(您的Token)，不配置PUSH_PLUS_USER则默认为一对一推送
     # 注: Github Actions用户请到Settings->Secrets里设置,Name=PUSH_PLUS_TOKEN,Value=<获取的值>
-    PUSH_PLUS_TOKEN = 'd622bc1cf9cc4929a526913d97060bc4'
+    PUSH_PLUS_TOKEN = ''
     # PUSH_PLUS_USER: 一对多推送的“群组编码”（一对多推送下面->您的群组(如无则新建)->群组编码，如果您是创建群组人。也需点击“查看二维码”扫描绑定，否则不能接受群组消息推送）
     # 注: Github Actions用户请到Settings->Secrets里设置,Name=PUSH_PLUS_USER,Value=<获取的值>
     PUSH_PLUS_USER = ''
@@ -122,10 +124,10 @@ class Notify(object):
         PUSH_PLUS_USER = os.environ['PUSH_PLUS_USER']
 
     def serverChan(self, text, status, desp):
-        if Notify.PUSH_SCKEY != '':
-            url = 'https://sc.ftqq.com/{}.send'.format(Notify.PUSH_SCKEY)
+        if Notify.SCKEY != '':
+            url = 'https://sc.ftqq.com/{}.send'.format(Notify.SCKEY)
             data = {
-                'text': '{} {}'.format(text, status), 
+                'text': '{} {}'.format(text, status),
                 'desp': desp
             }
             try:
@@ -142,13 +144,13 @@ class Notify(object):
                 else:
                     log.error('Server酱推送失败:\n{}'.format(response))
         else:
-            log.info('您未提供Server酱推送所需的SCKEY,取消Server酱推送通知')
+            log.info('您未配置Server酱推送所需的SCKEY,取消Server酱推送')
             pass
 
     def coolPush(self, text, status, desp):
-        if Notify.PUSH_SKEY != '':
+        if Notify.COOL_PUSH_SKEY != '':
             url = 'https://push.xuthus.cc/{}/{}'.format(
-                Notify.PUSH_SKEY_MODE, Notify.PUSH_SKEY)
+                Notify.COOL_PUSH_MODE, Notify.COOL_PUSH_SKEY)
             data = '{} {}\n\n{}'.format(text, status, desp).encode('utf-8')
             try:
                 response = self.to_python(requests.post(url, data=data).text)
@@ -161,13 +163,13 @@ class Notify(object):
                 else:
                     log.error('Cool Push推送失败:\n{}'.format(response))
         else:
-            log.info('您未提供酷推推送所需的SKEY,取消酷推推送通知')
+            log.info('您未配置Cool Push推送所需的COOL_PUSH_SKEY,取消Cool Push推送')
             pass
 
     def bark(self, text, status, desp):
-        if Notify.PUSH_BARK != '':
-            url = '{}/{} {}/{}?sound={}'.format(Notify.PUSH_BARK, text, status,
-                desp, Notify.PUSH_BARK_SOUND)
+        if Notify.BARK_KEY != '':
+            url = '{}/{} {}/{}?sound={}'.format(
+                Notify.BARK_KEY, text, status, desp, Notify.BARK_SOUND)
             try:
                 response = self.to_python(requests.get(url).text)
             except Exception as e:
@@ -181,7 +183,7 @@ class Notify(object):
                 else:
                     log.error('Bark推送失败:\n{}'.format(response))
         else:
-            log.info('您未提供Bark推送所需的PUSH_BARK,取消Bark推送通知')
+            log.info('您未配置Bark推送所需的BARK_KEY,取消Bark推送')
             pass
 
     def tgBot(self, text, status, desp):
@@ -209,7 +211,7 @@ class Notify(object):
                     log.error('Telegram推送失败:\n{}'.format(response))
         else:
             log.info(
-                '您未提供Telegram Bot推送所需的TG_BOT_TOKEN和TG_USER_ID,取消Telegram推送通知')
+                '您未配置Telegram推送所需的TG_BOT_TOKEN和TG_USER_ID,取消Telegram推送')
             pass
 
     def ddBot(self, text, status, desp):
@@ -223,14 +225,15 @@ class Notify(object):
                 }
             }
             if Notify.DD_BOT_SECRET != '':
-                timestamp = long(round(time.time() * 1000))
+                secret = Notify.DD_BOT_SECRET
+                timestamp = int(round(time.time() * 1000))
                 secret_enc = bytes(secret).encode('utf-8')
                 string_to_sign = '{}\n{}'.format(timestamp, secret)
                 string_to_sign_enc = bytes(string_to_sign).encode('utf-8')
                 hmac_code = hmac.new(
                     secret_enc, string_to_sign_enc,
                     digestmod=hashlib.sha256).digest()
-                sign = urllib.quote_plus(base64.b64encode(hmac_code))
+                sign = parse.quote_plus(base64.b64encode(hmac_code))
                 url = 'https://oapi.dingtalk.com/robot/send?access_token={}&timestamp={}&sign={}'.format(
                     Notify.DD_BOT_TOKEN, timestamp, sign)
             try:
@@ -244,12 +247,13 @@ class Notify(object):
                 else:
                     log.error('钉钉推送失败:\n{}'.format(response))
         else:
-            log.info('您未提供钉钉推送所需的DD_BOT_TOKEN或DD_BOT_SECRET,取消钉钉推送通知')
+            log.info('您未配置钉钉推送所需的DD_BOT_TOKEN或DD_BOT_SECRET,取消钉钉推送')
             pass
 
     def wwBot(self, text, status, desp):
-        if Notify.WW_BOT_TOKEN != '':
-            url = 'https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key={}'.format(Notify.WW_BOT_TOKEN)
+        if Notify.WW_BOT_KEY != '':
+            url = 'https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key={}'.format(
+                Notify.WW_BOT_KEY)
             data = {
                 'msgtype': 'text',
                 'text': {
@@ -267,12 +271,12 @@ class Notify(object):
                 else:
                     log.error('企业微信推送失败:\n{}'.format(response))
         else:
-            log.info('您未提供企业微信推送所需的WW_BOT_TOKEN,取消企业微信推送通知')
+            log.info('您未配置企业微信推送所需的WW_BOT_KEY,取消企业微信推送')
             pass
 
     def iGot(self, text, status, desp):
-        if Notify.PUSH_IGOT != '':
-            url = 'https://push.hellyw.com/{}'.format(Notify.PUSH_IGOT)
+        if Notify.IGOT_KEY != '':
+            url = 'https://push.hellyw.com/{}'.format(Notify.IGOT_KEY)
             data = {
                 'title': '{} {}'.format(text, status),
                 'content': desp
@@ -288,7 +292,7 @@ class Notify(object):
                 else:
                     log.error('iGot推送失败:\n{}'.format(response))
         else:
-            log.info('您未提供iGot推送所需的PUSH_IGOT,取消iGot推送通知')
+            log.info('您未配置iGot推送所需的IGOT_KEY,取消iGot推送')
             pass
 
     def pushPlus(self, text, status, desp):
@@ -311,25 +315,27 @@ class Notify(object):
                 else:
                     log.error('pushplus推送失败:\n{}'.format(response))
         else:
-            log.info('您未提供pushplus推送所需的PUSH_PLUS_TOKEN,取消pushplus推送通知')
+            log.info('您未配置pushplus推送所需的PUSH_PLUS_TOKEN,取消pushplus推送')
             pass
 
     def send(self, **kwargs):
-        log.info('准备推送通知...')
-        app = kwargs.get('app', '')
+        app = '原神签到小助手'
         status = kwargs.get('status', '')
         msg = kwargs.get('msg', '')
+        if isinstance(msg, list) or isinstance(msg, dict):
+            msg = self.to_json(msg)
+        log.info('{}:\n{}'.format(status, msg))
+        log.info('准备推送通知...')
 
-        #self.serverChan(app, status, msg)
-        #self.coolPush(app, status, msg)
+        # self.serverChan(app, status, msg)
+        # self.coolPush(app, status, msg)
         self.bark(app, status, msg)
-        #self.tgBot(app, status, msg)
-        #self.ddBot(app, status, msg)
-        #self.wwBot(app, status, msg)
-        #self.iGot(app, status, msg)
-        #self.pushPlus(app, status, msg)
+        # self.tgBot(app, status, msg)
+        # self.ddBot(app, status, msg)
+        # self.wwBot(app, status, msg)
+        # self.iGot(app, status, msg)
+        # self.pushPlus(app, status, msg)
 
 
-if __name__ == '__main__':
-    Notify().send(app='原神签到小助手', status='签到状态', msg='内容详情')
-
+# if __name__ == '__main__':
+#     Notify().send(app='原神签到小助手', status='签到状态', msg='内容详情')
